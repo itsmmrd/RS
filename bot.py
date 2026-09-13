@@ -46,12 +46,15 @@ from google_services import (
     next_receipt_name,
     public_base_url,
     redirect_uri,
+    sheet_file_link,
     upload_receipt_file,
 )
 from receipt_format import (
     category_display,
     format_amount,
     format_display_date,
+    meal_display,
+    trim_detail,
 )
 from scan_document import ensure_telegram_photo_file, scan_image
 from storage import is_google_connected, load_user
