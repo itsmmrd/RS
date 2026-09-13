@@ -269,7 +269,16 @@ def normalize_edit_field(field: str, raw: str, api_key: str | None = None) -> st
                 if amount is None:
                     raise ValueError(f"Could not normalize amount: {parsed.value}")
                 return amount
-            return parsed.value.strip()
+            value = parsed.value.strip()
+            if field == "category":
+                from receipt_format import normalize_category
+
+                return normalize_category(value)
+            if field == "detail":
+                from receipt_format import trim_detail
+
+                return trim_detail(value)
+            return value
         except Exception as exc:  # noqa: BLE001
             last_error = exc
             continue
