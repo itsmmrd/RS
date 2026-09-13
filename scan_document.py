@@ -343,6 +343,7 @@ def scan_image(image_path: Path, high_contrast: bool = False, output_path: Path 
     if not _usable_page(warped):
         warped = image.copy()
     scanned = enhance_high_contrast(warped) if high_contrast else enhance_readable(warped)
+    scanned = fit_telegram_photo(scanned)
 
     if output_path is None:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
