@@ -199,16 +199,10 @@ def format_info(info: ReceiptInfo, name: str | None = None) -> str:
     lines = []
     if name:
         lines.append(f"#{name}")
-    lines.append(f"Date: {format_display_date(info.date)}")
-    lines.append(f"Category: {category_display(info)}")
-    meal = meal_display(info)
-    if meal:
-        lines.append(f"Meal: {meal}")
-    detail = trim_detail(info.detail)
-    if detail:
-        lines.append(f"Detail: {detail}")
     lines.extend(
         [
+            f"Date: {format_display_date(info.date)}",
+            f"Category: {category_display(info)}",
             f"Amount: {format_amount(info)}",
             f"Merchant: {info.merchant or 'unknown'}",
         ]
