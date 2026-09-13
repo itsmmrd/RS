@@ -121,10 +121,11 @@ def extract_receipt(image_path: Path, api_key: str | None = None) -> ReceiptInfo
         "Read this receipt photo and extract the purchase details. "
         "Use the printed total, do not add line items yourself. "
         "If the date is written as DD.MM.YYYY or DD/MM/YYYY, convert it to YYYY-MM-DD. "
-        "Choose a single category that best matches the store and items. "
+        "Category must be exactly one word: groceries or dining for food/meal "
+        "purchases, otherwise other. "
+        "Detail must be at most 5 words describing what was bought. "
         "If a purchase time is printed, return it as HH:MM. "
-        "For groceries, dining, or food stores, infer breakfast, lunch, or dinner "
-        "from the items and time when possible. "
+        "For food purchases, infer breakfast, lunch, or dinner when possible. "
         "If a field is unreadable, return null for that field."
     )
     image_part = types.Part.from_bytes(data=image_path.read_bytes(), mime_type=mime)
