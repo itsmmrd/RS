@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-import re
+import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -15,10 +17,14 @@ from googleapiclient.http import MediaFileUpload
 from config import (
     APP_NAME,
     DRIVE_FOLDER_NAME,
+    OAUTH_DIR,
     SCOPES,
     SHEET_TITLE,
     require,
 )
+
+OAUTH_PENDING_TTL = 600
+from receipt_format import format_display_date, receipt_number
 from storage import load_user, save_user
 
 SHEET_HEADERS = [
@@ -39,6 +45,57 @@ def public_base_url() -> str:
 
 def redirect_uri() -> str:
     return f"{public_base_url()}/oauth/callback"
+
+
+def connect_url(telegram_id: int) -> str:
+    """Short link for Telegram buttons — redirects to Google OAuth."""
+    return f"{public_base_url()}/oauth/start?uid={telegram_id}"
+
+
+def normalize_callback_url(request_url: str) -> str:
+    """Match Google token exchange to the registered redirect URI."""
+    parsed = urlparse(request_url)
+    base = redirect_uri()
+    if parsed.query:
+        return f"{base}?{parsed.query}"
+    return base
+
+
+def _pending_oauth_path(telegram_id: int) -> Path:
+    return OAUTH_DIR / f"{telegram_id}.json"
+
+
+def _save_pending_oauth(telegram_id: int, code_verifier: str) -> None:
+    OAUTH_DIR.mkdir(parents=True, exist_ok=True)
+    _pending_oauth_path(telegram_id).write_text(
+        json.dumps({"code_verifier": code_verifier, "created": time.time()}),
+        encoding="utf-8",
+    )
+
+
+def _load_pending_oauth(telegram_id: int) -> str:
+    path = _pending_oauth_path(telegram_id)
+    if not path.is_file():
+        raise RuntimeError(
+            "OAuth session expired or invalid. Send /connect in Telegram and open the new link."
+        )
+    data = json.loads(path.read_text(encoding="utf-8"))
+    created = float(data.get("created") or 0)
+    if time.time() - created > OAUTH_PENDING_TTL:
+        path.unlink(missing_ok=True)
+        raise RuntimeError(
+            "OAuth session expired. Send /connect in Telegram and open the new link."
+        )
+    verifier = data.get("code_verifier")
+    if not verifier:
+        raise RuntimeError(
+            "OAuth session invalid. Send /connect in Telegram and open the new link."
+        )
+    return str(verifier)
+
+
+def _clear_pending_oauth(telegram_id: int) -> None:
+    _pending_oauth_path(telegram_id).unlink(missing_ok=True)
 
 
 def _client_config() -> dict[str, Any]:
@@ -62,6 +119,8 @@ def authorization_url(telegram_id: int) -> str:
         prompt="consent",
         state=str(telegram_id),
     )
+    if flow.code_verifier:
+        _save_pending_oauth(telegram_id, flow.code_verifier)
     return url
 
 
@@ -89,9 +148,16 @@ def json_credentials(creds: Credentials) -> dict[str, Any]:
 
 
 def finish_oauth(telegram_id: int, callback_url: str) -> dict[str, Any]:
+    code_verifier = _load_pending_oauth(telegram_id)
     flow = Flow.from_client_config(_client_config(), scopes=SCOPES)
     flow.redirect_uri = redirect_uri()
-    flow.fetch_token(authorization_response=callback_url)
+    try:
+        flow.fetch_token(
+            authorization_response=normalize_callback_url(callback_url),
+            code_verifier=code_verifier,
+        )
+    finally:
+        _clear_pending_oauth(telegram_id)
     record = load_user(telegram_id)
     record["google"] = json_credentials(flow.credentials)
     save_user(record)
@@ -147,33 +213,16 @@ def ensure_google_workspace(telegram_id: int) -> dict[str, Any]:
     return record
 
 
-def receipt_name(number: int, date_text: str | None) -> str:
-    month, year = _month_year(date_text)
-    return f"{number}-{month}-{year}"
-
-
-def _month_year(date_text: str | None) -> tuple[str, str]:
-    if date_text:
-        match = re.search(r"(\d{4})-(\d{2})", date_text)
-        if match:
-            return match.group(2), match.group(1)
-        match = re.search(r"(\d{2})[./](\d{4})", date_text)
-        if match:
-            return match.group(1), match.group(2)
-    now = datetime.now()
-    return f"{now.month:02d}", str(now.year)
-
-
-def next_receipt_name(telegram_id: int, date_text: str | None) -> str:
+def next_receipt_name(telegram_id: int, date_text: str | None = None) -> str:
     record = load_user(telegram_id)
     number = int(record.get("next_number") or 1)
-    return receipt_name(number, date_text)
+    return receipt_number(number)
 
 
-def allocate_receipt_name(telegram_id: int, date_text: str | None) -> str:
+def allocate_receipt_name(telegram_id: int, date_text: str | None = None) -> str:
     record = load_user(telegram_id)
     number = int(record.get("next_number") or 1)
-    name = receipt_name(number, date_text)
+    name = receipt_number(number)
     record["next_number"] = number + 1
     save_user(record)
     return name
@@ -222,7 +271,7 @@ def append_sheet_row(
             "values": [
                 [
                     name,
-                    date or "",
+                    format_display_date(date) if date else "",
                     category or "",
                     amount if amount is not None else "",
                     currency or "",
@@ -245,6 +294,44 @@ def list_records(telegram_id: int) -> list[list[str]]:
         .execute()
     )
     return result.get("values") or []
+
+
+def _drive_image_files(drive, folder_id: str, name: str) -> list[dict[str, Any]]:
+    query = (
+        f"name contains '{name}' and '{folder_id}' in parents "
+        "and trashed = false"
+    )
+    found = drive.files().list(q=query, fields="files(id,name,mimeType)").execute()
+    images = []
+    for item in found.get("files") or []:
+        mime = item.get("mimeType") or ""
+        if mime.startswith("image/") or mime == "application/pdf":
+            images.append(item)
+    return images
+
+
+def attach_photo_to_record(telegram_id: int, name: str, path: Path) -> str:
+    """Upload or replace the Drive photo for an existing sheet row."""
+    record = ensure_google_workspace(telegram_id)
+    drive, sheets = _services(record)
+    rows = list_records(telegram_id)
+    row_index = None
+    for offset, row in enumerate(rows, start=2):
+        if row and row[0] == name:
+            row_index = offset
+            break
+    if row_index is None:
+        raise ValueError(f"Record #{name} not found.")
+    for item in _drive_image_files(drive, record["folder_id"], name):
+        drive.files().delete(fileId=item["id"]).execute()
+    file_link = upload_receipt_file(telegram_id, path, name)
+    sheets.spreadsheets().values().update(
+        spreadsheetId=record["spreadsheet_id"],
+        range=f"G{row_index}",
+        valueInputOption="RAW",
+        body={"values": [[file_link]]},
+    ).execute()
+    return file_link
 
 
 def delete_record(telegram_id: int, name: str) -> bool:
@@ -279,12 +366,6 @@ def delete_record(telegram_id: int, name: str) -> bool:
             ]
         },
     ).execute()
-    if file_link or name:
-        query = (
-            f"name contains '{name}' and '{record['folder_id']}' in parents "
-            "and trashed = false"
-        )
-        found = drive.files().list(q=query, fields="files(id,name)").execute()
-        for item in found.get("files") or []:
-            drive.files().delete(fileId=item["id"]).execute()
+    for item in _drive_image_files(drive, record["folder_id"], name):
+        drive.files().delete(fileId=item["id"]).execute()
     return True
