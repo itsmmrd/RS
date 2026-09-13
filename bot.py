@@ -81,6 +81,33 @@ BTN_SHEET = "📊 Sheet"
 MENU_NAV_FILTER = filters.Regex(f"^({BTN_LIST}|{BTN_REMOVE}|{BTN_SHEET})$")
 
 
+async def reply_processed_preview(
+    message,
+    processed: Path,
+    *,
+    caption: str,
+    reply_markup: InlineKeyboardMarkup,
+) -> None:
+    ensure_telegram_photo_file(processed)
+    try:
+        with processed.open("rb") as handle:
+            await message.reply_photo(
+                photo=InputFile(handle, filename="receipt.jpg"),
+                caption=caption,
+                reply_markup=reply_markup,
+            )
+    except BadRequest as exc:
+        if "photo" not in str(exc).lower():
+            raise
+        log.warning("reply_photo rejected (%s); sending as document", exc)
+        with processed.open("rb") as handle:
+            await message.reply_document(
+                document=InputFile(handle, filename="receipt.jpg"),
+                caption=caption,
+                reply_markup=reply_markup,
+            )
+
+
 async def send_google_connect(update: Update) -> None:
     target = update.effective_message
     if target is None or update.effective_user is None:
