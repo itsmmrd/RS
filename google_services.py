@@ -377,7 +377,7 @@ def list_records(telegram_id: int) -> list[list[str]]:
     result = (
         sheets.spreadsheets()
         .values()
-        .get(spreadsheetId=record["spreadsheet_id"], range="A2:H")
+        .get(spreadsheetId=record["spreadsheet_id"], range="A2:I")
         .execute()
     )
     return result.get("values") or []
