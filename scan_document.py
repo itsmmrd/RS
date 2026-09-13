@@ -244,38 +244,63 @@ def find_document_quad(image: np.ndarray) -> np.ndarray:
     return max(candidates, key=lambda q: _score_quad(q, width, height))
 
 
-# Telegram sendPhoto rejects sides above 10_000 px; stay well under that.
-MAX_OUTPUT_WIDTH = 1280
-MAX_OUTPUT_HEIGHT = 4096
+# Telegram sendPhoto: width + height <= 10_000 and aspect ratio <= 20:1.
+TELEGRAM_MAX_PHOTO_SUM = 10_000
+TELEGRAM_MAX_PHOTO_RATIO = 20.0
 
 
-def _fit_page(
-    image: np.ndarray,
-    *,
-    max_width: int = MAX_OUTPUT_WIDTH,
-    max_height: int = MAX_OUTPUT_HEIGHT,
-) -> np.ndarray:
+def _photo_limits_ok(width: int, height: int) -> bool:
+    if width < 1 or height < 1:
+        return False
+    if width + height > TELEGRAM_MAX_PHOTO_SUM:
+        return False
+    return max(width, height) / min(width, height) <= TELEGRAM_MAX_PHOTO_RATIO
+
+
+def fit_telegram_photo(image: np.ndarray) -> np.ndarray:
+    """Pad/resize so Telegram sendPhoto accepts the image."""
     height, width = image.shape[:2]
-    scale = min(max_width / width, max_height / height, 1.0)
-    if scale >= 1.0:
+    if _photo_limits_ok(width, height):
         return image
-    return cv2.resize(
-        image,
-        (max(1, int(width * scale)), max(1, int(height * scale))),
-        interpolation=cv2.INTER_AREA,
-    )
+
+    pad_value = 255 if image.ndim == 2 else (255, 255, 255)
+    ratio = max(width, height) / min(width, height)
+    if ratio > TELEGRAM_MAX_PHOTO_RATIO:
+        if height > width:
+            new_width = int(np.ceil(height / TELEGRAM_MAX_PHOTO_RATIO))
+            pad = new_width - width
+            image = cv2.copyMakeBorder(
+                image, 0, 0, pad // 2, pad - pad // 2, cv2.BORDER_CONSTANT, value=pad_value
+            )
+        else:
+            new_height = int(np.ceil(width / TELEGRAM_MAX_PHOTO_RATIO))
+            pad = new_height - height
+            image = cv2.copyMakeBorder(
+                image, pad // 2, pad - pad // 2, 0, 0, cv2.BORDER_CONSTANT, value=pad_value
+            )
+        height, width = image.shape[:2]
+
+    if width + height > TELEGRAM_MAX_PHOTO_SUM:
+        scale = (TELEGRAM_MAX_PHOTO_SUM - 2) / float(width + height)
+        image = cv2.resize(
+            image,
+            (max(1, int(width * scale)), max(1, int(height * scale))),
+            interpolation=cv2.INTER_AREA,
+        )
+
+    return image
 
 
 def _upscale_page(image: np.ndarray, target_width: int = 900) -> np.ndarray:
     height, width = image.shape[:2]
-    if width < target_width:
-        scale = target_width / width
-        image = cv2.resize(
-            image,
-            (target_width, max(1, int(height * scale))),
-            interpolation=cv2.INTER_CUBIC,
-        )
-    return _fit_page(image)
+    if width >= target_width:
+        return image
+    scale = target_width / width
+    return cv2.resize(
+        image,
+        (target_width, max(1, int(height * scale))),
+        interpolation=cv2.INTER_CUBIC,
+    )
 
 
 def enhance_readable(warped: np.ndarray) -> np.ndarray:
