@@ -263,7 +263,7 @@ def ensure_google_workspace(telegram_id: int) -> dict[str, Any]:
     header = (
         sheets.spreadsheets()
         .values()
-        .get(spreadsheetId=record["spreadsheet_id"], range="A1:I1")
+        .get(spreadsheetId=record["spreadsheet_id"], range="A1:H1")
         .execute()
         .get("values")
         or [[]]
