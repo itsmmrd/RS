@@ -3,6 +3,15 @@ __pycache__/
 *.pyc
 .DS_Store
 .env
+.env.*
+!.env.example
+.env.local
+.env.production
 data/
 output/
 sample.jpeg
+*.pem
+*.json.key
+credentials.json
+token.json
+client_secret*.json

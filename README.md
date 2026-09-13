@@ -1,13 +1,25 @@
-# ReciptscannerAtuoamtiion RSA
+# Receipt Scanner Automation RSA
 
 Telegram bot that scans a receipt photo, extracts date / category / amount with Gemini, then saves the file to the user's Google Drive and a row to their Google Sheet.
 
-The saved name starts at `1` and includes the receipt month and year, for example `1-09-2026`. That name is used for the Drive file and the sheet row.
+Each saved receipt gets a sequential number (`#1`, `#2`, …). Dates are stored as `DD MM YYYY`. Food purchases can include a meal label such as `(lunch)`.
+
+**Tokens never go to GitHub.** They are asked during install and stored only in a local `.env` file on the server (see `.env.example` for variable names).
 
 ## One-line Ubuntu install
 
+Paste this on the server. It downloads the project and starts the installer:
+
+First install or later update:
+
 ```bash
-sudo bash install.sh
+curl -fsSL https://raw.githubusercontent.com/itsmmrd/RS/main/install.sh -o /tmp/rsa-install.sh && sudo bash /tmp/rsa-install.sh reinstall
+```
+
+Uninstall:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/itsmmrd/RS/main/install.sh -o /tmp/rsa-install.sh && sudo bash /tmp/rsa-install.sh uninstall
 ```
 
 The installer asks for:
@@ -15,34 +27,40 @@ The installer asks for:
 - Telegram bot token (`@BotFather`)
 - Gemini API key
 - Google OAuth client ID and secret
-- Public server URL, for example `http://YOUR_SERVER_IP:8080`
 
-Then it creates a virtualenv, writes `.env`, and starts `rsa-bot` with systemd.
+It detects the server public IP, sets up HTTPS with Caddy, and builds the Google callback. Example (replace with your server IP):
+
+`https://203-0-113-50.nip.io/oauth/callback`
+
+Then it clones into `/opt/rsa`, writes `.env` on the server only, and starts `rsa-bot` with systemd.
 
 ## Google Cloud setup
 
 1. Create a project in Google Cloud.
 2. Enable **Google Drive API** and **Google Sheets API**.
 3. Create an **OAuth 2.0 Web client**.
-4. Add this authorized redirect URI (same as the public URL you typed):
+4. Add the authorized redirect URI printed by the installer, for example:
 
-   `http://YOUR_SERVER_IP:8080/oauth/callback`
+   `https://203-0-113-50.nip.io/oauth/callback`
 
-5. Open the Telegram bot. The first message asks you to connect your Google account.
+5. Open ports **80**, **443**, and **8090** in your cloud firewall if needed.
 
-## Bot commands
+6. Test in a browser: `https://YOUR-IP-AS-NIP.IO/oauth/health` should show `OAuth server is running`.
 
-| Command | Action |
+7. Open the Telegram bot. Connect Google on first use via the **Connect Google account** button.
+
+## Bot usage
+
+| Action | What it does |
 | --- | --- |
-| Send a photo | Scan, extract text, then ask if the result is OK |
-| Save result | Upload the processed photo |
-| Save original photo | Upload the original photo instead |
-| Edit text | Change date, category, amount, or merchant before saving |
-| `/add` | Add a record manually, then optionally send a photo |
-| `/text` | Add only text, no picture |
-| `/delete` | Remove a record by name, for example `1-09-2026` |
-| `/list` | Show recent records |
-| `/connect` | Reconnect Google |
+| Send a photo | Scan receipt, review, then save processed or original photo |
+| **Edit text** | Button menu to edit date, category, amount, etc. (AI normalizes input) |
+| **Link to existing** | Attach scanned photo to an existing receipt row |
+| **📋 List** / `/list` | Recent receipts with Drive and delete buttons |
+| **➕ Add** / `/add` | Paste receipt text in one message — AI formats it |
+| **🗑 Remove** / `/delete` | Tap a receipt to remove from Sheet and Drive |
+| **📊 Sheet** | Open your Google Sheet |
+| `/connect` | Connect or refresh Google account |
 | `/cancel` | Stop the current step |
 
 ## Local run
@@ -50,6 +68,12 @@ Then it creates a virtualenv, writes `.env`, and starts `rsa-bot` with systemd.
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-# create .env with the same keys as install.sh
+cp .env.example .env   # fill in values locally; never commit .env
 .venv/bin/python bot.py
 ```
+
+## Security
+
+- `.env`, `data/`, OAuth tokens, and credentials JSON files are gitignored.
+- Do not paste bot tokens or API keys into issues, commits, or chat logs.
+- If a token was exposed, regenerate it in @BotFather / Google Cloud and update `.env` on the server.
