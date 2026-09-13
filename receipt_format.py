@@ -28,15 +28,32 @@ def receipt_number(number: int) -> str:
     return str(number)
 
 
+def parse_date_parts(date_text: str | None) -> tuple[int, int, int] | None:
+    """Return (year, month, day) from common receipt date strings."""
+    if not date_text:
+        return None
+    cleaned = date_text.strip()
+    if not cleaned:
+        return None
+    match = re.match(r"(\d{4})-(\d{2})-(\d{2})", cleaned)
+    if match:
+        return int(match.group(1)), int(match.group(2)), int(match.group(3))
+    match = re.match(r"(\d{2})\s+(\d{2})\s+(\d{4})", cleaned)
+    if match:
+        return int(match.group(3)), int(match.group(2)), int(match.group(1))
+    match = re.match(r"(\d{2})[./-](\d{2})[./-](\d{4})", cleaned)
+    if match:
+        return int(match.group(3)), int(match.group(2)), int(match.group(1))
+    return None
+
+
 def format_display_date(date_text: str | None) -> str:
     if not date_text:
         return "unknown"
-    match = re.match(r"(\d{4})-(\d{2})-(\d{2})", date_text.strip())
-    if match:
-        return f"{match.group(3)} {match.group(2)} {match.group(1)}"
-    match = re.match(r"(\d{2})[./-](\d{2})[./-](\d{4})", date_text.strip())
-    if match:
-        return f"{match.group(1)} {match.group(2)} {match.group(3)}"
+    parts = parse_date_parts(date_text)
+    if parts:
+        y, m, d = parts
+        return f"{d:02d} {m:02d} {y}"
     return date_text
 
 

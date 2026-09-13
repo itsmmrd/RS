@@ -24,7 +24,7 @@ from config import (
 )
 
 OAUTH_PENDING_TTL = 600
-from receipt_format import format_display_date, receipt_number
+from receipt_format import parse_date_parts, receipt_number
 from storage import load_user, save_user
 
 SHEET_HEADERS = [
