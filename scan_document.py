@@ -122,8 +122,14 @@ def _valid_quad(quad: np.ndarray, width: int, height: int) -> bool:
     if w < 20 or h < 20:
         return False
 
+    # Reject thin strips (e.g. table edge) that upscale into huge Telegram photos.
+    if w < width * 0.2 or h < height * 0.2:
+        return False
+
     # Reject near-square table crops; receipts and pages are usually taller.
     aspect = max(w, h) / min(w, h)
+    if aspect > 10:
+        return False
     return aspect >= 1.15
 
 
