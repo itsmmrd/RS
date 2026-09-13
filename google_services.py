@@ -391,10 +391,9 @@ def attach_photo_to_record(telegram_id: int, name: str, path: Path) -> str:
     for item in _drive_image_files(drive, record["folder_id"], name):
         drive.files().delete(fileId=item["id"]).execute()
     file_link = upload_receipt_file(telegram_id, path, name)
-    file_col = sheet_file_column(rows[row_index - 2])
     sheets.spreadsheets().values().update(
         spreadsheetId=record["spreadsheet_id"],
-        range=f"{file_col}{row_index}",
+        range=f"G{row_index}",
         valueInputOption="RAW",
         body={"values": [[file_link]]},
     ).execute()
