@@ -51,6 +51,7 @@ from google_services import (
 )
 from receipt_format import (
     category_display,
+    finalize_receipt,
     format_amount,
     format_display_date,
     meal_display,
