@@ -573,7 +573,6 @@ async def save_current(
         amount=info.amount,
         currency=info.currency,
         merchant=info.merchant,
-        detail=trim_detail(info.detail),
         file_link=file_link,
     )
     record = load_user(user_id)
