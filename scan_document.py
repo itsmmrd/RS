@@ -255,9 +255,9 @@ TELEGRAM_MAX_PHOTO_RATIO_SAFE = 19.9
 def _photo_limits_ok(width: int, height: int) -> bool:
     if width < 1 or height < 1:
         return False
-    if width + height > TELEGRAM_MAX_PHOTO_SUM:
+    if width + height > TELEGRAM_MAX_PHOTO_SUM_SAFE:
         return False
-    return max(width, height) / min(width, height) <= TELEGRAM_MAX_PHOTO_RATIO
+    return max(width, height) / min(width, height) <= TELEGRAM_MAX_PHOTO_RATIO_SAFE
 
 
 def fit_telegram_photo(image: np.ndarray) -> np.ndarray:
