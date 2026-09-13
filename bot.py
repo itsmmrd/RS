@@ -405,15 +405,16 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     original = user_dir / "original.jpg"
     processed = user_dir / "processed.jpg"
 
-    await message.reply_text("Scanning the receipt...")
+    await message.reply_text("Reading receipt...")
     file = await photo.get_file()
     await file.download_to_drive(original)
 
     try:
-        await asyncio.to_thread(scan_image, original, False, processed)
+        # AI reads the original upload; scan/clean is only for preview and saving.
         info = await asyncio.to_thread(extract_receipt, original)
+        await asyncio.to_thread(scan_image, original, False, processed)
     except Exception as exc:  # noqa: BLE001
-        log.exception("Scan/extract failed")
+        log.exception("Extract/scan failed")
         await message.reply_text(f"Could not process this photo: {exc}")
         return ConversationHandler.END
 
