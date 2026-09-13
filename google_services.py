@@ -409,7 +409,7 @@ def delete_record(telegram_id: int, name: str) -> bool:
     for offset, row in enumerate(rows, start=2):
         if row and row[0] == name:
             row_index = offset
-            file_link = sheet_file_link(row)
+            file_link = row[6] if len(row) > 6 else ""
             break
     if row_index is None:
         return False
