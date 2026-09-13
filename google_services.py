@@ -249,7 +249,7 @@ def ensure_google_workspace(telegram_id: int) -> dict[str, Any]:
         record["spreadsheet_url"] = created.get("spreadsheetUrl")
         sheets.spreadsheets().values().update(
             spreadsheetId=record["spreadsheet_id"],
-            range="A1:I1",
+            range="A1:H1",
             valueInputOption="RAW",
             body={"values": [SHEET_HEADERS]},
         ).execute()
@@ -271,7 +271,7 @@ def ensure_google_workspace(telegram_id: int) -> dict[str, Any]:
     if header != SHEET_HEADERS:
         sheets.spreadsheets().values().update(
             spreadsheetId=record["spreadsheet_id"],
-            range="A1:I1",
+            range="A1:H1",
             valueInputOption="RAW",
             body={"values": [SHEET_HEADERS]},
         ).execute()
