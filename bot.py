@@ -252,6 +252,9 @@ def edit_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton("Merchant", callback_data="edit:merchant"),
+                InlineKeyboardButton("Detail", callback_data="edit:detail"),
+            ],
+            [
                 InlineKeyboardButton("Time", callback_data="edit:time"),
             ],
             [InlineKeyboardButton("Done", callback_data="edit:back")],
