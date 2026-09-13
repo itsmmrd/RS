@@ -324,7 +324,6 @@ def append_sheet_row(
     amount: float | None,
     currency: str | None,
     merchant: str | None,
-    detail: str | None,
     file_link: str,
 ) -> None:
     record = ensure_google_workspace(telegram_id)
