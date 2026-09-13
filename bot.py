@@ -176,11 +176,8 @@ def records_keyboard(
         name = row[0]
         date = row[1] if len(row) > 1 else ""
         amount = row[3] if len(row) > 3 else ""
-        detail = row[6] if len(row) > 7 and not str(row[6]).startswith("http") else ""
         label = f"#{name} · {date} · {amount}".strip()
-        if detail:
-            label = f"{label} · {detail}".strip()
-        file_link = sheet_file_link(row)
+        file_link = row[6] if len(row) > 6 else ""
         if delete_only:
             buttons.append(
                 [InlineKeyboardButton(f"🗑 {label}", callback_data=f"del:{name}")]
