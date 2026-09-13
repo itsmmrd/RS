@@ -423,8 +423,9 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     context.user_data["has_photo"] = True
     persist_review_session(context, update.effective_user.id)
     name = next_receipt_name(update.effective_user.id, info.date)
-    await message.reply_photo(
-        photo=processed.read_bytes(),
+    await reply_processed_preview(
+        message,
+        processed,
         caption=(
             f"Processed result\n\n{format_info(info, name)}\n\n"
             "Is this result OK?"
