@@ -308,6 +308,8 @@ def print_receipt(info: ReceiptInfo) -> None:
     print("Extracted receipt")
     print(f"  date:     {info.date or 'unknown'}")
     print(f"  category: {info.category or 'unknown'}")
+    if info.detail:
+        print(f"  detail: {info.detail}")
     print(f"  amount:   {info.amount if info.amount is not None else 'unknown'}")
     if info.currency:
         print(f"  currency: {info.currency}")
