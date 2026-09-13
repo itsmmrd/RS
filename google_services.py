@@ -313,7 +313,6 @@ def append_sheet_row(
 ) -> None:
     record = ensure_google_workspace(telegram_id)
     _drive, sheets = _services(record)
-    created = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
     sheets.spreadsheets().values().append(
         spreadsheetId=record["spreadsheet_id"],
         range="A:H",
@@ -323,13 +322,13 @@ def append_sheet_row(
             "values": [
                 [
                     name,
-                    format_display_date(date) if date else "",
+                    _sheet_date_formula(date),
                     category or "",
                     amount if amount is not None else "",
                     currency or "",
                     merchant or "",
                     file_link,
-                    created,
+                    _sheet_created_formula(),
                 ]
             ]
         },
