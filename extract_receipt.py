@@ -152,6 +152,12 @@ def extract_receipt(image_path: Path, api_key: str | None = None) -> ReceiptInfo
     raise RuntimeError(f"Gemini could not extract receipt data: {last_error}")
 
 
+def _finalize(info: ReceiptInfo) -> ReceiptInfo:
+    from receipt_format import finalize_receipt
+
+    return finalize_receipt(info)
+
+
 def extract_receipt_from_text(text: str, api_key: str | None = None) -> ReceiptInfo:
     cleaned = text.strip()
     if not cleaned:
