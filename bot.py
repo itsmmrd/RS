@@ -382,7 +382,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
     try:
         await asyncio.to_thread(scan_image, original, False, processed)
-        info = await asyncio.to_thread(extract_receipt, processed)
+        info = await asyncio.to_thread(extract_receipt, original)
     except Exception as exc:  # noqa: BLE001
         log.exception("Scan/extract failed")
         await message.reply_text(f"Could not process this photo: {exc}")
