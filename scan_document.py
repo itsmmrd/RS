@@ -262,43 +262,39 @@ def _photo_limits_ok(width: int, height: int) -> bool:
 
 def fit_telegram_photo(image: np.ndarray) -> np.ndarray:
     """Pad/resize so Telegram sendPhoto accepts the image."""
-    height, width = image.shape[:2]
-    if _photo_limits_ok(width, height):
-        return image
-
     pad_value = 255 if image.ndim == 2 else (255, 255, 255)
-    ratio = max(width, height) / min(width, height)
-    if ratio > TELEGRAM_MAX_PHOTO_RATIO_SAFE:
-        if height > width:
-            new_width = int(np.ceil(height / TELEGRAM_MAX_PHOTO_RATIO_SAFE))
-            pad = new_width - width
-            image = cv2.copyMakeBorder(
-                image, 0, 0, pad // 2, pad - pad // 2, cv2.BORDER_CONSTANT, value=pad_value
-            )
-        else:
-            new_height = int(np.ceil(width / TELEGRAM_MAX_PHOTO_RATIO_SAFE))
-            pad = new_height - height
-            image = cv2.copyMakeBorder(
-                image, pad // 2, pad - pad // 2, 0, 0, cv2.BORDER_CONSTANT, value=pad_value
-            )
-        height, width = image.shape[:2]
 
-    if width + height > TELEGRAM_MAX_PHOTO_SUM_SAFE:
-        scale = TELEGRAM_MAX_PHOTO_SUM_SAFE / float(width + height)
-        image = cv2.resize(
-            image,
-            (max(1, int(width * scale)), max(1, int(height * scale))),
-            interpolation=cv2.INTER_AREA,
-        )
-
-    height, width = image.shape[:2]
-    while not _photo_limits_ok(width, height):
-        image = cv2.resize(
-            image,
-            (max(1, int(width * 0.98)), max(1, int(height * 0.98))),
-            interpolation=cv2.INTER_AREA,
-        )
+    for _ in range(8):
         height, width = image.shape[:2]
+        if _photo_limits_ok(width, height):
+            return image
+
+        ratio = max(width, height) / min(width, height)
+        if ratio > TELEGRAM_MAX_PHOTO_RATIO_SAFE:
+            if height > width:
+                new_width = int(np.ceil(height / TELEGRAM_MAX_PHOTO_RATIO_SAFE))
+                pad = new_width - width
+                image = cv2.copyMakeBorder(
+                    image, 0, 0, pad // 2, pad - pad // 2, cv2.BORDER_CONSTANT, value=pad_value
+                )
+            else:
+                new_height = int(np.ceil(width / TELEGRAM_MAX_PHOTO_RATIO_SAFE))
+                pad = new_height - height
+                image = cv2.copyMakeBorder(
+                    image, pad // 2, pad - pad // 2, 0, 0, cv2.BORDER_CONSTANT, value=pad_value
+                )
+            continue
+
+        if width + height > TELEGRAM_MAX_PHOTO_SUM_SAFE:
+            scale = TELEGRAM_MAX_PHOTO_SUM_SAFE / float(width + height)
+            image = cv2.resize(
+                image,
+                (max(1, int(width * scale)), max(1, int(height * scale))),
+                interpolation=cv2.INTER_AREA,
+            )
+            continue
+
+        break
 
     return image
 
