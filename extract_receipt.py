@@ -142,9 +142,9 @@ def extract_receipt(image_path: Path, api_key: str | None = None) -> ReceiptInfo
                 ),
             )
             if response.parsed is not None:
-                return finalize_receipt(response.parsed)
+                return _finalize(response.parsed)
             if response.text:
-                return finalize_receipt(ReceiptInfo.model_validate_json(response.text))
+                return _finalize(ReceiptInfo.model_validate_json(response.text))
         except Exception as exc:  # noqa: BLE001
             last_error = exc
             continue
