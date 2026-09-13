@@ -283,8 +283,8 @@ def fit_telegram_photo(image: np.ndarray) -> np.ndarray:
             )
         height, width = image.shape[:2]
 
-    if width + height > TELEGRAM_MAX_PHOTO_SUM:
-        scale = (TELEGRAM_MAX_PHOTO_SUM - 2) / float(width + height)
+    if width + height > TELEGRAM_MAX_PHOTO_SUM_SAFE:
+        scale = TELEGRAM_MAX_PHOTO_SUM_SAFE / float(width + height)
         image = cv2.resize(
             image,
             (max(1, int(width * scale)), max(1, int(height * scale))),
