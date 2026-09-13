@@ -38,6 +38,55 @@ SHEET_HEADERS = [
     "Created",
 ]
 
+# Google Sheets custom display formats (real date values, not plain text).
+SHEET_DATE_FORMAT = {"type": "DATE", "pattern": "dd mm yyyy"}
+SHEET_CREATED_FORMAT = {"type": "DATE_TIME", "pattern": "dd mm yyyy hh:mm"}
+
+
+def _sheet_date_formula(date_text: str | None) -> str:
+    parts = parse_date_parts(date_text)
+    if parts is None:
+        return ""
+    year, month, day = parts
+    return f"=DATE({year},{month},{day})"
+
+
+def _sheet_created_formula(when: datetime | None = None) -> str:
+    now = when or datetime.now(timezone.utc)
+    return (
+        f"=DATE({now.year},{now.month},{now.day})"
+        f"+TIME({now.hour},{now.minute},{now.second})"
+    )
+
+
+def _apply_sheet_date_formats(sheets, spreadsheet_id: str, sheet_id: int) -> None:
+    """Format Date (B) and Created (H) columns as dates, not numbers/text."""
+    requests = []
+    for col_index, number_format in (
+        (1, SHEET_DATE_FORMAT),
+        (7, SHEET_CREATED_FORMAT),
+    ):
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": 1,
+                        "startColumnIndex": col_index,
+                        "endColumnIndex": col_index + 1,
+                    },
+                    "cell": {
+                        "userEnteredFormat": {"numberFormat": number_format}
+                    },
+                    "fields": "userEnteredFormat.numberFormat",
+                }
+            }
+        )
+    sheets.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body={"requests": requests},
+    ).execute()
+
 
 def public_base_url() -> str:
     return require("PUBLIC_BASE_URL").rstrip("/")
