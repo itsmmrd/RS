@@ -247,6 +247,9 @@ def find_document_quad(image: np.ndarray) -> np.ndarray:
 # Telegram sendPhoto: width + height <= 10_000 and aspect ratio <= 20:1.
 TELEGRAM_MAX_PHOTO_SUM = 10_000
 TELEGRAM_MAX_PHOTO_RATIO = 20.0
+# Stay slightly inside Telegram limits to avoid rounding rejections.
+TELEGRAM_MAX_PHOTO_SUM_SAFE = 9_980
+TELEGRAM_MAX_PHOTO_RATIO_SAFE = 19.9
 
 
 def _photo_limits_ok(width: int, height: int) -> bool:
