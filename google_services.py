@@ -78,11 +78,12 @@ def _sheet_created_formula(when: datetime | None = None) -> str:
 
 
 def _apply_sheet_date_formats(sheets, spreadsheet_id: str, sheet_id: int) -> None:
-    """Format Date (B) and Created (H) columns as dates, not numbers/text."""
+    """Format Date (B) and Created (I/H) columns as dates, not numbers/text."""
     requests = []
     for col_index, number_format in (
         (1, SHEET_DATE_FORMAT),
-        (7, SHEET_CREATED_FORMAT),
+        (COL_CREATED, SHEET_CREATED_FORMAT),
+        (COL_CREATED_LEGACY, SHEET_CREATED_FORMAT),
     ):
         requests.append(
             {
