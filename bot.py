@@ -485,6 +485,7 @@ EDIT_FIELD_HINTS = {
     "amount": "Send an amount (e.g. 31,31 euro). AI will fix it. Send - to clear.",
     "currency": "Send a currency (e.g. euro). AI will fix it. Send - to clear.",
     "merchant": "Send the store name. AI will fix spelling. Send - to clear.",
+    "detail": "Send a short summary (up to 5 words). AI will trim it. Send - to clear.",
     "time": "Send a time (e.g. 7pm). AI will fix it. Send - to clear.",
 }
 
