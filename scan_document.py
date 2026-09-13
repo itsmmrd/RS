@@ -291,6 +291,15 @@ def fit_telegram_photo(image: np.ndarray) -> np.ndarray:
             interpolation=cv2.INTER_AREA,
         )
 
+    height, width = image.shape[:2]
+    while not _photo_limits_ok(width, height):
+        image = cv2.resize(
+            image,
+            (max(1, int(width * 0.98)), max(1, int(height * 0.98))),
+            interpolation=cv2.INTER_AREA,
+        )
+        height, width = image.shape[:2]
+
     return image
 
 
