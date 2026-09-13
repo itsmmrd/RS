@@ -53,7 +53,7 @@ def format_display_date(date_text: str | None) -> str:
     parts = parse_date_parts(date_text)
     if parts:
         y, m, d = parts
-        return f"{d:02d} {m:02d} {y}"
+        return f"{d:02d}.{m:02d}.{y}"
     return date_text
 
 

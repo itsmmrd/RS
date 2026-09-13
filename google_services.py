@@ -39,8 +39,8 @@ SHEET_HEADERS = [
 ]
 
 # Google Sheets custom display formats (real date values, not plain text).
-SHEET_DATE_FORMAT = {"type": "DATE", "pattern": "dd mm yyyy"}
-SHEET_CREATED_FORMAT = {"type": "DATE_TIME", "pattern": "dd mm yyyy hh:mm"}
+SHEET_DATE_FORMAT = {"type": "DATE", "pattern": "dd.mm.yyyy"}
+SHEET_CREATED_FORMAT = {"type": "DATE_TIME", "pattern": "dd.mm.yyyy hh:mm"}
 
 
 def _sheet_date_formula(date_text: str | None) -> str:
