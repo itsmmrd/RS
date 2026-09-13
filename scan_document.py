@@ -244,15 +244,38 @@ def find_document_quad(image: np.ndarray) -> np.ndarray:
     return max(candidates, key=lambda q: _score_quad(q, width, height))
 
 
-def _upscale_page(image: np.ndarray, target_width: int = 900) -> np.ndarray:
-    if image.shape[1] >= target_width:
+# Telegram sendPhoto rejects sides above 10_000 px; stay well under that.
+MAX_OUTPUT_WIDTH = 1280
+MAX_OUTPUT_HEIGHT = 4096
+
+
+def _fit_page(
+    image: np.ndarray,
+    *,
+    max_width: int = MAX_OUTPUT_WIDTH,
+    max_height: int = MAX_OUTPUT_HEIGHT,
+) -> np.ndarray:
+    height, width = image.shape[:2]
+    scale = min(max_width / width, max_height / height, 1.0)
+    if scale >= 1.0:
         return image
-    scale = target_width / image.shape[1]
     return cv2.resize(
         image,
-        (target_width, int(image.shape[0] * scale)),
-        interpolation=cv2.INTER_CUBIC,
+        (max(1, int(width * scale)), max(1, int(height * scale))),
+        interpolation=cv2.INTER_AREA,
     )
+
+
+def _upscale_page(image: np.ndarray, target_width: int = 900) -> np.ndarray:
+    height, width = image.shape[:2]
+    if width < target_width:
+        scale = target_width / width
+        image = cv2.resize(
+            image,
+            (target_width, max(1, int(height * scale))),
+            interpolation=cv2.INTER_CUBIC,
+        )
+    return _fit_page(image)
 
 
 def enhance_readable(warped: np.ndarray) -> np.ndarray:
