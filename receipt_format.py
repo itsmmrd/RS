@@ -7,8 +7,6 @@ from datetime import datetime
 
 from extract_receipt import ReceiptInfo
 
-FOOD_CATEGORIES = frozenset({"groceries", "dining"})
-
 FOOD_KEYWORDS = (
     "grocer",
     "dining",
@@ -23,19 +21,6 @@ FOOD_KEYWORDS = (
     "dinner",
     "supermarket",
     "market",
-)
-
-DINING_KEYWORDS = (
-    "restaurant",
-    "dining",
-    "cafe",
-    "coffee",
-    "bakery",
-    "bistro",
-    "pizza",
-    "burger",
-    "takeaway",
-    "take-out",
 )
 
 
@@ -106,45 +91,14 @@ def infer_meal(category: str | None, purchase_time: str | None) -> str | None:
     return None
 
 
-def trim_detail(text: str | None) -> str:
-    if not text:
-        return ""
-    words = text.strip().split()
-    return " ".join(words[:5])
-
-
-def normalize_category(category: str | None, merchant: str | None = None) -> str:
-    """One-word category: groceries, dining, or other."""
-    raw = (category or "").strip().lower()
-    word = raw.split()[0] if raw else ""
-    if word in FOOD_CATEGORIES:
-        return word
-
-    combined = f"{category or ''} {merchant or ''}".lower()
-    if any(keyword in combined for keyword in DINING_KEYWORDS):
-        return "dining"
-    if any(keyword in combined for keyword in FOOD_KEYWORDS):
-        return "groceries"
-    return "other"
-
-
-def meal_display(info: ReceiptInfo) -> str | None:
-    meal = (info.meal or "").strip().lower()
-    if meal in {"breakfast", "lunch", "dinner"}:
-        return meal
-    if normalize_category(info.category, info.merchant) in FOOD_CATEGORIES:
-        return infer_meal(info.category, info.purchase_time)
-    return None
-
-
 def category_display(info: ReceiptInfo) -> str:
-    return normalize_category(info.category, info.merchant)
-
-
-def finalize_receipt(info: ReceiptInfo) -> ReceiptInfo:
-    info.category = normalize_category(info.category, info.merchant)
-    info.detail = trim_detail(info.detail)
-    return info
+    base = (info.category or "other").strip()
+    meal = (info.meal or "").strip().lower()
+    if meal not in {"breakfast", "lunch", "dinner"}:
+        meal = infer_meal(info.category, info.purchase_time) or ""
+    if meal and is_food_category(info.category):
+        return f"{base} ({meal})"
+    return base
 
 
 def parse_input_date(text: str) -> str | None:

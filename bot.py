@@ -51,7 +51,6 @@ from google_services import (
 )
 from receipt_format import (
     category_display,
-    finalize_receipt,
     format_amount,
     format_display_date,
     meal_display,
@@ -539,7 +538,6 @@ async def edit_value(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             await update.message.reply_text(f"Could not understand that: {exc}\n\nTry again.")
             return EDIT_FIELD
         setattr(info, EDIT_FIELD_ATTR[field], normalized)
-    info = finalize_receipt(info)
     store_info(context, info)
     persist_review_session(context, update.effective_user.id)
     context.user_data.pop("edit_field", None)

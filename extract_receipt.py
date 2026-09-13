@@ -47,15 +47,9 @@ class ReceiptInfo(BaseModel):
     category: str | None = Field(
         default=None,
         description=(
-            "Exactly one lowercase English word. Use groceries or dining only "
-            "for food or meal-related purchases; otherwise use other."
-        ),
-    )
-    detail: str | None = Field(
-        default=None,
-        description=(
-            "Short receipt summary in at most 5 words, such as main items "
-            "bought or purchase context."
+            "One purchase category such as groceries, drugstore, pharmacy, "
+            "health, beauty, household, dining, transport, electronics, "
+            "clothing, entertainment, or other."
         ),
     )
     amount: float | None = Field(
@@ -121,11 +115,10 @@ def extract_receipt(image_path: Path, api_key: str | None = None) -> ReceiptInfo
         "Read this receipt photo and extract the purchase details. "
         "Use the printed total, do not add line items yourself. "
         "If the date is written as DD.MM.YYYY or DD/MM/YYYY, convert it to YYYY-MM-DD. "
-        "Category must be exactly one word: groceries or dining for food/meal "
-        "purchases, otherwise other. "
-        "Detail must be at most 5 words describing what was bought. "
+        "Choose a single category that best matches the store and items. "
         "If a purchase time is printed, return it as HH:MM. "
-        "For food purchases, infer breakfast, lunch, or dinner when possible. "
+        "For groceries, dining, or food stores, infer breakfast, lunch, or dinner "
+        "from the items and time when possible. "
         "If a field is unreadable, return null for that field."
     )
     image_part = types.Part.from_bytes(data=image_path.read_bytes(), mime_type=mime)
@@ -142,20 +135,14 @@ def extract_receipt(image_path: Path, api_key: str | None = None) -> ReceiptInfo
                 ),
             )
             if response.parsed is not None:
-                return _finalize(response.parsed)
+                return response.parsed
             if response.text:
-                return _finalize(ReceiptInfo.model_validate_json(response.text))
+                return ReceiptInfo.model_validate_json(response.text)
         except Exception as exc:  # noqa: BLE001
             last_error = exc
             continue
 
     raise RuntimeError(f"Gemini could not extract receipt data: {last_error}")
-
-
-def _finalize(info: ReceiptInfo) -> ReceiptInfo:
-    from receipt_format import finalize_receipt
-
-    return finalize_receipt(info)
 
 
 def extract_receipt_from_text(text: str, api_key: str | None = None) -> ReceiptInfo:
@@ -166,11 +153,9 @@ def extract_receipt_from_text(text: str, api_key: str | None = None) -> ReceiptI
     prompt = (
         "Parse this receipt note into structured purchase details. "
         "The user may write freely in any language or format. "
-        "Extract date, category, detail, amount, currency, merchant, purchase time, "
-        "and meal when possible. Convert dates to YYYY-MM-DD. "
-        "Category must be one word: groceries or dining for food/meal purchases, "
-        "otherwise other. Detail must be at most 5 words. "
-        "For food purchases, infer breakfast, lunch, or dinner when possible. "
+        "Extract date, category, amount, currency, merchant, purchase time, and meal "
+        "when possible. Convert dates to YYYY-MM-DD. Choose one best category. "
+        "For food or grocery purchases, infer breakfast, lunch, or dinner when possible. "
         "Use null for unknown fields.\n\n"
         f"User text:\n{cleaned}"
     )
@@ -186,9 +171,9 @@ def extract_receipt_from_text(text: str, api_key: str | None = None) -> ReceiptI
                 ),
             )
             if response.parsed is not None:
-                return _finalize(response.parsed)
+                return response.parsed
             if response.text:
-                return _finalize(ReceiptInfo.model_validate_json(response.text))
+                return ReceiptInfo.model_validate_json(response.text)
         except Exception as exc:  # noqa: BLE001
             last_error = exc
             continue
@@ -208,11 +193,8 @@ EDIT_FIELD_PROMPTS = {
         "Accept formats like DD.MM.YYYY, DD MM YYYY, '1 sep 2026', or 'yesterday'."
     ),
     "category": (
-        "Return exactly one lowercase English word: groceries or dining for "
-        "food/meal purchases, otherwise other."
-    ),
-    "detail": (
-        "Return a short receipt summary in at most 5 words describing what was bought."
+        "Fix spelling and return one short purchase category in lowercase English, "
+        "such as groceries, dining, drugstore, transport, or other."
     ),
     "amount": (
         "Extract the total amount as a plain decimal number without currency symbols "
@@ -273,16 +255,7 @@ def normalize_edit_field(field: str, raw: str, api_key: str | None = None) -> st
                 if amount is None:
                     raise ValueError(f"Could not normalize amount: {parsed.value}")
                 return amount
-            value = parsed.value.strip()
-            if field == "category":
-                from receipt_format import normalize_category
-
-                return normalize_category(value)
-            if field == "detail":
-                from receipt_format import trim_detail
-
-                return trim_detail(value)
-            return value
+            return parsed.value.strip()
         except Exception as exc:  # noqa: BLE001
             last_error = exc
             continue
@@ -308,8 +281,6 @@ def print_receipt(info: ReceiptInfo) -> None:
     print("Extracted receipt")
     print(f"  date:     {info.date or 'unknown'}")
     print(f"  category: {info.category or 'unknown'}")
-    if info.detail:
-        print(f"  detail: {info.detail}")
     print(f"  amount:   {info.amount if info.amount is not None else 'unknown'}")
     if info.currency:
         print(f"  currency: {info.currency}")
