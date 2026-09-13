@@ -495,6 +495,7 @@ EDIT_FIELD_ATTR = {
     "amount": "amount",
     "currency": "currency",
     "merchant": "merchant",
+    "detail": "detail",
     "time": "purchase_time",
 }
 
