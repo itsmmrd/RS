@@ -350,7 +350,7 @@ def append_sheet_row(
     _drive, sheets = _services(record)
     sheets.spreadsheets().values().append(
         spreadsheetId=record["spreadsheet_id"],
-        range="A:H",
+        range="A:I",
         valueInputOption="USER_ENTERED",
         insertDataOption="INSERT_ROWS",
         body={
@@ -362,6 +362,7 @@ def append_sheet_row(
                     amount if amount is not None else "",
                     currency or "",
                     merchant or "",
+                    detail or "",
                     file_link,
                     _sheet_created_formula(),
                 ]
