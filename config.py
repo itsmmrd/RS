@@ -11,7 +11,7 @@ USERS_DIR = DATA_DIR / "users"
 TMP_DIR = DATA_DIR / "tmp"
 OAUTH_DIR = DATA_DIR / "oauth"
 
-APP_NAME = "ReciptscannerAtuoamtiion RSA"
+APP_NAME = "Receipt Scanner Automation RSA"
 DRIVE_FOLDER_NAME = "RSA Receipts"
 SHEET_TITLE = "RSA Receipts"
 SCOPES = (
@@ -39,7 +39,8 @@ def require(name: str) -> str:
 
 
 load_env_file()
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-USERS_DIR.mkdir(parents=True, exist_ok=True)
-TMP_DIR.mkdir(parents=True, exist_ok=True)
-OAUTH_DIR.mkdir(parents=True, exist_ok=True)
+for folder in (DATA_DIR, USERS_DIR, TMP_DIR, OAUTH_DIR):
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
