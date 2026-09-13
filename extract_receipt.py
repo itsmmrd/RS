@@ -202,8 +202,11 @@ EDIT_FIELD_PROMPTS = {
         "Accept formats like DD.MM.YYYY, DD MM YYYY, '1 sep 2026', or 'yesterday'."
     ),
     "category": (
-        "Fix spelling and return one short purchase category in lowercase English, "
-        "such as groceries, dining, drugstore, transport, or other."
+        "Return exactly one lowercase English word: groceries or dining for "
+        "food/meal purchases, otherwise other."
+    ),
+    "detail": (
+        "Return a short receipt summary in at most 5 words describing what was bought."
     ),
     "amount": (
         "Extract the total amount as a plain decimal number without currency symbols "
