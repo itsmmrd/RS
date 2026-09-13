@@ -77,4 +77,4 @@ cp .env.example .env   # fill in values locally; never commit .env
 - Do not paste bot tokens or API keys into issues, commits, or chat logs.
 - If a token was exposed, regenerate it in @BotFather / Google Cloud and update `.env` on the server.
 
-![image](https://github.com/itsmmrd/Receipt_Scanner_Automation_RSA/blob/5b53cbf8815f50a16c3397f8babb371ed6663841/2.png | width=100)
+![image](https://github.com/itsmmrd/Receipt_Scanner_Automation_RSA/blob/5b53cbf8815f50a16c3397f8babb371ed6663841/2.png)
