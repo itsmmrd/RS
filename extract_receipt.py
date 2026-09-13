@@ -18,6 +18,8 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 
+from receipt_format import finalize_receipt
+
 ROOT = Path(__file__).resolve().parent
 DEFAULT_IMAGE = ROOT / "output" / "sample.jpeg"
 OUTPUT_DIR = ROOT / "output"
