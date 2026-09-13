@@ -7,6 +7,8 @@ from datetime import datetime
 
 from extract_receipt import ReceiptInfo
 
+FOOD_CATEGORIES = frozenset({"groceries", "dining"})
+
 FOOD_KEYWORDS = (
     "grocer",
     "dining",
@@ -21,6 +23,19 @@ FOOD_KEYWORDS = (
     "dinner",
     "supermarket",
     "market",
+)
+
+DINING_KEYWORDS = (
+    "restaurant",
+    "dining",
+    "cafe",
+    "coffee",
+    "bakery",
+    "bistro",
+    "pizza",
+    "burger",
+    "takeaway",
+    "take-out",
 )
 
 
