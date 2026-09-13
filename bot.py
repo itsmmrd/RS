@@ -302,7 +302,7 @@ def attach_pick_keyboard(rows: list[list[str]]) -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = []
     for row in rows[-15:]:
         name = row[0]
-        has_photo = bool(row[6] if len(row) > 6 else "")
+        has_photo = bool(sheet_file_link(row))
         tag = "replace photo" if has_photo else "add photo"
         date = row[1] if len(row) > 1 else ""
         amount = row[3] if len(row) > 3 else ""
