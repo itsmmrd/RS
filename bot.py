@@ -53,7 +53,7 @@ from receipt_format import (
     format_amount,
     format_display_date,
 )
-from scan_document import scan_image
+from scan_document import fit_telegram_photo, scan_image
 from storage import is_google_connected, load_user
 
 load_env_file()
