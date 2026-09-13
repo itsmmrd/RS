@@ -258,6 +258,9 @@ def ensure_google_workspace(telegram_id: int) -> dict[str, Any]:
             addParents=record["folder_id"],
             fields="id,parents",
         ).execute()
+    meta = sheets.spreadsheets().get(spreadsheetId=record["spreadsheet_id"]).execute()
+    sheet_id = meta["sheets"][0]["properties"]["sheetId"]
+    _apply_sheet_date_formats(sheets, record["spreadsheet_id"], sheet_id)
     save_user(record)
     return record
 
