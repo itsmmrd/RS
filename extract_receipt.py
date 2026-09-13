@@ -47,9 +47,15 @@ class ReceiptInfo(BaseModel):
     category: str | None = Field(
         default=None,
         description=(
-            "One purchase category such as groceries, drugstore, pharmacy, "
-            "health, beauty, household, dining, transport, electronics, "
-            "clothing, entertainment, or other."
+            "Exactly one lowercase English word. Use groceries or dining only "
+            "for food or meal-related purchases; otherwise use other."
+        ),
+    )
+    detail: str | None = Field(
+        default=None,
+        description=(
+            "Short receipt summary in at most 5 words, such as main items "
+            "bought or purchase context."
         ),
     )
     amount: float | None = Field(
