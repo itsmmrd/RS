@@ -268,9 +268,9 @@ def fit_telegram_photo(image: np.ndarray) -> np.ndarray:
 
     pad_value = 255 if image.ndim == 2 else (255, 255, 255)
     ratio = max(width, height) / min(width, height)
-    if ratio > TELEGRAM_MAX_PHOTO_RATIO:
+    if ratio > TELEGRAM_MAX_PHOTO_RATIO_SAFE:
         if height > width:
-            new_width = int(np.ceil(height / TELEGRAM_MAX_PHOTO_RATIO))
+            new_width = int(np.ceil(height / TELEGRAM_MAX_PHOTO_RATIO_SAFE))
             pad = new_width - width
             image = cv2.copyMakeBorder(
                 image, 0, 0, pad // 2, pad - pad // 2, cv2.BORDER_CONSTANT, value=pad_value
