@@ -4,8 +4,7 @@ Telegram bot that scans a receipt photo, extracts date / category / amount with 
 
 Each saved receipt gets a sequential number (`#1`, `#2`, …). Dates are stored as `DD MM YYYY`. Food purchases can include a meal label such as `(lunch)`.
 
-**Tokens never go to GitHub.** They are asked during install and stored only in a local `.env` file on the server (see `.env.example` for variable names).
-
+![image](https://github.com/itsmmrd/Receipt_Scanner_Automation_RSA/blob/4cc711db30c01c6215266babc78b5176e0fa09f2/scripts/1.png)
 ## One-line Ubuntu install
 
 Paste this on the server. It downloads the project and starts the installer:
