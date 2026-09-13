@@ -295,6 +295,14 @@ def enhance_high_contrast(warped: np.ndarray) -> np.ndarray:
     )
 
 
+def _usable_page(image: np.ndarray) -> bool:
+    height, width = image.shape[:2]
+    if width < 80 or height < 80:
+        return False
+    aspect = max(width, height) / min(width, height)
+    return aspect <= 12
+
+
 def scan_image(image_path: Path, high_contrast: bool = False, output_path: Path | None = None) -> Path:
     image = cv2.imread(str(image_path))
     if image is None:
@@ -307,6 +315,8 @@ def scan_image(image_path: Path, high_contrast: bool = False, output_path: Path 
     warped = four_point_transform(image, quad * ratio)
     if warped.shape[1] > warped.shape[0]:
         warped = cv2.rotate(warped, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    if not _usable_page(warped):
+        warped = image.copy()
     scanned = enhance_high_contrast(warped) if high_contrast else enhance_readable(warped)
 
     if output_path is None:
