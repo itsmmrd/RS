@@ -34,9 +34,27 @@ SHEET_HEADERS = [
     "Amount",
     "Currency",
     "Merchant",
+    "Detail",
     "File link",
     "Created",
 ]
+
+COL_FILE_LINK = 7
+COL_FILE_LINK_LEGACY = 6
+COL_CREATED = 8
+COL_CREATED_LEGACY = 7
+
+
+def sheet_file_link(row: list[str]) -> str:
+    if len(row) > COL_FILE_LINK:
+        return row[COL_FILE_LINK]
+    if len(row) > COL_FILE_LINK_LEGACY:
+        return row[COL_FILE_LINK_LEGACY]
+    return ""
+
+
+def sheet_file_column(row: list[str]) -> str:
+    return "H" if len(row) > COL_FILE_LINK else "G"
 
 # Google Sheets custom display formats (real date values, not plain text).
 SHEET_DATE_FORMAT = {"type": "DATE", "pattern": "dd.mm.yyyy"}
