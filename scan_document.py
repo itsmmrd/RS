@@ -291,6 +291,16 @@ def fit_telegram_photo(image: np.ndarray) -> np.ndarray:
     return image
 
 
+def ensure_telegram_photo_file(path: Path) -> Path:
+    """Rewrite image on disk so sendPhoto will accept it."""
+    image = cv2.imread(str(path))
+    if image is None:
+        return path
+    fitted = fit_telegram_photo(image)
+    cv2.imwrite(str(path), fitted)
+    return path
+
+
 def _upscale_page(image: np.ndarray, target_width: int = 900) -> np.ndarray:
     height, width = image.shape[:2]
     if width >= target_width:
