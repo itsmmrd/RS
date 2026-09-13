@@ -160,9 +160,11 @@ def extract_receipt_from_text(text: str, api_key: str | None = None) -> ReceiptI
     prompt = (
         "Parse this receipt note into structured purchase details. "
         "The user may write freely in any language or format. "
-        "Extract date, category, amount, currency, merchant, purchase time, and meal "
-        "when possible. Convert dates to YYYY-MM-DD. Choose one best category. "
-        "For food or grocery purchases, infer breakfast, lunch, or dinner when possible. "
+        "Extract date, category, detail, amount, currency, merchant, purchase time, "
+        "and meal when possible. Convert dates to YYYY-MM-DD. "
+        "Category must be one word: groceries or dining for food/meal purchases, "
+        "otherwise other. Detail must be at most 5 words. "
+        "For food purchases, infer breakfast, lunch, or dinner when possible. "
         "Use null for unknown fields.\n\n"
         f"User text:\n{cleaned}"
     )
