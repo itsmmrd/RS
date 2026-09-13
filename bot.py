@@ -223,7 +223,13 @@ async def edit_callback_message(
 
 
 def format_saved_message(info: ReceiptInfo, name: str) -> str:
-    return format_info(info, name).replace(f"#{name}", f"Saved #{name}", 1)
+    return (
+        f"Saved #{name}\n\n"
+        f"Date: {format_display_date(info.date)}\n"
+        f"Category: {category_display(info)}\n"
+        f"Amount: {format_amount(info)}\n"
+        f"Merchant: {info.merchant or 'unknown'}"
+    )
 
 
 def edit_text_button() -> InlineKeyboardButton:
